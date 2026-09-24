@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>百年美学风格定位系统</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0e0d10; --card: #17161a; --card-hover: #1e1c22; --line: #2a2830;
+    --gold: #c9a86a; --gold-soft: #e0c894; --text: #e8e4dc; --muted: #8f8a80;
+    --c-A: #c9a86a; --c-B: #9c4a4a; --c-C: #a8805a; --c-D: #d4b87a; --c-E: #7e8fa0; --c-F: #6f8060;
+  }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; min-height: 100vh; display: flex; justify-content: center; padding: 44px 20px 100px; line-height: 1.75; -webkit-font-smoothing: antialiased; }
+  .app { width: 100%; max-width: 700px; }
+  .serif { font-family: "Songti SC", "Noto Serif SC", Georgia, "Times New Roman", serif; }
+  .screen { display: none; } .screen.active { display: block; animation: fadeUp .5s ease both; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .cover { text-align: center; padding: 40px 0 24px; }
+  .cover .kicker { font-size: 11px; letter-spacing: .42em; color: var(--gold); margin-bottom: 24px; text-transform: uppercase; }
+  .cover h1 { font-size: clamp(30px, 6vw, 46px); font-weight: 600; letter-spacing: .04em; line-height: 1.35; margin-bottom: 20px; }
+  .cover h1 em { font-style: normal; color: var(--gold-soft); }
+  .cover .lead { color: var(--muted); font-size: 15px; max-width: 520px; margin: 0 auto 12px; }
+  .cover .lead.small { font-size: 13px; color: #6d685f; margin-bottom: 38px; }
+  .cover .formula { display: inline-block; border: 1px solid var(--line); border-radius: 999px; padding: 11px 26px; font-size: 13px; color: var(--gold-soft); letter-spacing: .08em; margin-bottom: 42px; background: rgba(201,168,106,.05); }
+  .btn { font: inherit; cursor: pointer; border: none; border-radius: 999px; padding: 16px 48px; background: linear-gradient(135deg, #c9a86a, #e0c894); color: #16140f; font-weight: 600; letter-spacing: .1em; font-size: 15px; transition: .25s; box-shadow: 0 12px 32px -14px rgba(201,168,106,.6); }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 18px 40px -14px rgba(201,168,106,.75); }
+  .btn:active { transform: translateY(0); }
+  .btn.ghost { background: transparent; color: var(--gold); border: 1px solid var(--line); box-shadow: none; padding: 13px 34px; font-weight: 500; font-size: 14px; }
+  .btn.ghost:hover { border-color: var(--gold); background: rgba(201,168,106,.07); }
+  .btn.small { padding: 10px 22px; font-size: 13px; }
+  .q-head { margin-bottom: 30px; }
+  .progress-wrap { margin-bottom: 30px; }
+  .progress-top { display: flex; justify-content: space-between; font-size: 11px; letter-spacing: .22em; color: var(--muted); margin-bottom: 10px; }
+  .progress-bar { height: 2px; background: var(--line); border-radius: 2px; overflow: hidden; }
+  .progress-bar i { display: block; height: 100%; background: linear-gradient(90deg, #c9a86a, #e0c894); width: 0; transition: width .5s cubic-bezier(.4,0,.2,1); }
+  .q-title { font-size: clamp(20px, 4vw, 27px); font-weight: 600; letter-spacing: .03em; line-height: 1.55; margin-bottom: 8px; }
+  .q-sub { color: var(--muted); font-size: 13.5px; }
+  .options { display: flex; flex-direction: column; gap: 11px; margin-top: 28px; }
+  .option { display: flex; gap: 15px; align-items: flex-start; width: 100%; text-align: left; background: var(--card); border: 1px solid var(--line); color: inherit; padding: 16px 20px; border-radius: 14px; cursor: pointer; font: inherit; transition: .22s; }
+  .option:hover { border-color: var(--gold); background: var(--card-hover); transform: translateY(-2px); }
+  .option.selected { border-color: var(--gold); background: rgba(201,168,106,.09); }
+  .option .badge { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line); display: grid; place-items: center; font-size: 12px; font-weight: 600; color: var(--gold); background: rgba(201,168,106,.06); transition: .22s; }
+  .option:hover .badge, .option.selected .badge { background: rgba(201,168,106,.2); border-color: var(--gold); }
+  .option .opt-text { font-size: 14.5px; letter-spacing: .02em; }
+  .q-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 32px; gap: 12px; }
+  .result-head { text-align: center; padding: 8px 0 36px; }
+  .eyebrow { font-size: 11px; letter-spacing: .34em; color: var(--gold); margin-bottom: 18px; }
+  .result-head h1 { font-size: clamp(26px, 5.5vw, 40px); font-weight: 600; letter-spacing: .04em; line-height: 1.35; margin-bottom: 14px; }
+  .result-head .en { font-size: 13px; color: var(--muted); letter-spacing: .2em; margin-bottom: 18px; }
+  .slogan { font-size: 17px; color: var(--gold-soft); letter-spacing: .05em; line-height: 1.75; }
+  .section-label { font-size: 11px; letter-spacing: .3em; color: var(--gold); margin-bottom: 16px; }
+  .chart { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 24px 22px; margin-bottom: 30px; }
+  .chart-row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .chart-row:last-child { margin-bottom: 0; }
+  .chart-label { flex: 0 0 92px; font-size: 13px; color: #cfc9be; letter-spacing: .03em; }
+  .chart-bar-bg { flex: 1; height: 8px; background: #232128; border-radius: 999px; overflow: hidden; }
+  .chart-bar-fill { height: 100%; border-radius: 999px; width: 0; transition: width 1s cubic-bezier(.4,0,.2,1); }
+  .chart-row.dominant .chart-label { color: var(--text); font-weight: 600; }
+  .thought { background: var(--card); border-left: 3px solid var(--gold); border-radius: 0 14px 14px 0; padding: 20px 24px; font-size: 14.5px; color: #cfc9be; margin-bottom: 30px; line-height: 1.85; }
+  .thought b { color: var(--gold-soft); font-weight: 600; }
+  .ratio-card { display: flex; gap: 12px; margin-bottom: 30px; }
+  .ratio-item { flex: 1; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px 16px; text-align: center; }
+  .ratio-item .r-name { font-size: 15px; color: #e8e4dc; margin-top: 2px; letter-spacing: .05em; font-weight: 600; }
+  .ratio-item .r-sub { font-size: 11px; color: var(--muted); margin-top: 6px; letter-spacing: .15em; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin-bottom: 28px; }
+  .cell { background: var(--card); border: 1px solid var(--line); border-radius: 13px; padding: 16px 18px; }
+  .cell .k { font-size: 10.5px; letter-spacing: .22em; color: var(--gold); margin-bottom: 8px; }
+  .cell .v { font-size: 13.5px; color: #ddd8ce; line-height: 1.75; }
+  .cell.wide { grid-column: 1 / -1; }
+  .cell ul { list-style: none; display: flex; flex-wrap: wrap; gap: 7px; }
+  .cell ul li { font-size: 12.5px; border: 1px solid var(--line); border-radius: 999px; padding: 4px 13px; color: #ddd8ce; }
+  .tags { display: flex; flex-wrap: wrap; gap: 9px; justify-content: center; margin-bottom: 34px; }
+  .tags span { font-size: 12.5px; color: var(--gold-soft); border: 1px solid rgba(201,168,106,.35); background: rgba(201,168,106,.07); border-radius: 999px; padding: 5px 15px; letter-spacing: .05em; }
+  .advice { background: rgba(201,168,106,.05); border: 1px solid rgba(201,168,106,.2); border-radius: 16px; padding: 24px; margin-bottom: 30px; }
+  .advice .a-title { font-size: 12px; letter-spacing: .24em; color: var(--gold); margin-bottom: 14px; }
+  .advice p { font-size: 14px; color: #cfc9be; line-height: 1.85; margin-bottom: 10px; }
+  .advice p:last-child { margin-bottom: 0; }
+  .advice b { color: var(--gold-soft); font-weight: 600; }
+  .alt { border-top: 1px solid var(--line); padding-top: 26px; margin-bottom: 34px; }
+  .alt .alt-title { font-size: 11px; letter-spacing: .24em; color: var(--muted); margin-bottom: 16px; text-align: center; }
+  .alt .alt-list { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+  .alt .alt-item { font-size: 13px; color: #cbc5ba; border: 1px dashed var(--line); border-radius: 10px; padding: 9px 17px; }
+  .result-foot { text-align: center; }
+
+  .style-visual {
+    width: 100%;
+    height: 200px;
+    border-radius: 18px;
+    margin-bottom: 30px;
+    display: grid;
+    place-items: center;
+    font-size: 56px;
+    color: rgba(255,255,255,.92);
+    text-shadow: 0 2px 20px rgba(0,0,0,.5);
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    transition: background .6s ease;
+  }
+  .style-visual .visual-label {
+    position: absolute;
+    bottom: 14px;
+    left: 18px;
+    font-size: 13px;
+    letter-spacing: .15em;
+    color: rgba(255,255,255,.85);
+    text-shadow: 0 1px 12px rgba(0,0,0,.7);
+  }
+
+  @media (max-width: 480px) { body { padding: 28px 16px 76px; } .option { padding: 14px 16px; gap: 13px; } .cell { padding: 14px 16px; } .chart-label { flex: 0 0 76px; font-size: 12px; } .style-visual { height: 160px; font-size: 44px; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <section class="screen active" id="screen-start">
+    <div class="cover">
+      <p class="kicker">Century Aesthetic System</p>
+      <h1 class="serif">百年美学<br><em>风格定位</em></h1>
+      <p class="lead">30 道题，60 种风格。从 1920s 到 2020s，找到你思想深处对应的那一种。</p>
+      <p class="lead small">约 6 分钟 · 凭第一直觉作答</p>
+      <div class="formula">思想 → 情感 → 风格 → 单品</div><br>
+      <button class="btn" id="btn-start">开始定位</button>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-quiz">
+    <div class="progress-wrap">
+      <div class="progress-top"><span id="phase-label">存在基调</span><span id="progress-count">01 / 30</span></div>
+      <div class="progress-bar"><i id="progress-fill"></i></div>
+    </div>
+    <div class="q-head"><h2 class="q-title serif" id="q-title"></h2><p class="q-sub" id="q-sub"></p></div>
+    <div class="options" id="q-options"></div>
+    <div class="q-nav">
+      <button class="btn ghost small" id="btn-prev" style="visibility:hidden;">上一题</button>
+      <button class="btn ghost small" id="btn-next" style="visibility:hidden;">下一题</button>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-result">
+    <div class="result-head">
+      <p class="eyebrow" id="r-eyebrow"></p>
+      <h1 class="serif" id="r-name"></h1>
+      <p class="en" id="r-en"></p>
+      <p class="slogan serif" id="r-slogan"></p>
+    </div>
+
+    <div class="style-visual" id="r-visual"></div>
+
+    <p class="section-label">思想原型分布</p>
+    <div class="chart" id="r-chart"></div>
+    <div class="thought" id="r-thought"></div>
+    <p class="section-label">风格配比</p>
+    <div class="ratio-card" id="r-ratio"></div>
+    <p class="section-label">穿搭系统</p>
+    <div class="grid" id="r-grid"></div>
+    <div class="tags" id="r-tags"></div>
+    <div class="advice" id="r-advice"></div>
+    <div class="alt" id="r-alt"><p class="alt-title">同思想谱系下的其他可能</p><div class="alt-list" id="r-alt-list"></div></div>
+    <div class="result-foot"><button class="btn ghost" id="btn-restart">重新定位</button></div>
+  </section>
+</div>
+
+<script>
+/* ============================================================
+   风格库（60种，按原型归类）
+   ============================================================ */
+const STYLES = {
+  /* ========== A 秩序理性 ========== */
+  bauhaus: { name:'包豪斯/风格派', archetype:'A', desc:'艺术进入生活与工业，美来自功能、秩序和普世理性。', slogan:'“形式追随功能。”', colors:'红黄蓝 + 黑灰白', materials:'钢、玻璃、皮革、几何织物', items:['几何色块衬衫','直线剪裁外套','原色针织'], accessories:'几何胸针、极简腕表', avoid:'繁复装饰、曲线、柔和色', gradient:'linear-gradient(135deg, #d32f2f, #fbc02d, #1976d2)', emoji:'◼️' },
+  international: { name:'国际风格/流线型', archetype:'A', desc:'相信效率、速度与未来；少装饰，多流畅与进步感。', slogan:'“少即是多，流动即未来。”', colors:'银灰、白、黑、金属色', materials:'钢、玻璃、光滑面料', items:['流线型大衣','几何剪裁西装','金属配饰'], accessories:'银饰、极简包', avoid:'复古花纹、蕾丝、厚重装饰', gradient:'linear-gradient(135deg, #b0bec5, #eceff1, #90a4ae)', emoji:'〰️' },
+  midcentury: { name:'中世纪现代', archetype:'A', desc:'战后乐观主义；设计应民主、舒适、有机而现代。', slogan:'“好设计属于每个人。”', colors:'芥末黄、橄榄绿、橙、棕', materials:'木材、羊毛、棉、皮革', items:['A字裙','针织开衫','直筒裤'], accessories:'复古胸针、皮带、乐福鞋', avoid:'过度奢华、荧光色', gradient:'linear-gradient(135deg, #c9a227, #6b7a3a, #b5651d)', emoji:'🪑' },
+  minimalism: { name:'极简主义', archetype:'A', desc:'减少到本质；反装饰、反喧哗，让剪裁、材质和空间说话。', slogan:'“少即是多，沉默是力量。”', colors:'黑、白、灰、米', materials:'棉、羊毛、皮革、哑光', items:['白衬衫','黑色直筒裤','极简大衣'], accessories:'一块表、素戒', avoid:'印花、亮片、层叠', gradient:'linear-gradient(135deg, #1a1a1a, #4a4a4a, #e8e4dc)', emoji:'◻️' },
+  minimal_revival: { name:'极简回潮', archetype:'A', desc:'反消费喧嚣；克制、平静、品质、去Logo。', slogan:'“我拥有的越少，我越自由。”', colors:'米白、灰、驼、黑', materials:'羊绒、有机棉、亚麻', items:['无Logo针织','阔腿裤','平底鞋'], accessories:'帆布包、细项链', avoid:'大Logo、快时尚、繁复', gradient:'linear-gradient(135deg, #f5f1e8, #d7d2c6, #b8b2a5)', emoji:'🕊️' },
+  hitech: { name:'高技派', archetype:'A', desc:'科技崇拜与结构诚实；进步感就是美。', slogan:'“结构外露，就是未来。”', colors:'银、灰、黑、亮橙', materials:'金属、尼龙、透明材质', items:['机能外套','外露拉链裤','战术靴'], accessories:'护目镜、金属包', avoid:'田园、复古、蕾丝', gradient:'linear-gradient(135deg, #607d8b, #cfd8dc, #ff6f00)', emoji:'⚙️' },
+  industrial: { name:'工业风', archetype:'A', desc:'原始、城市、反精致；仓库、金属、裸露结构即诚实。', slogan:'“粗糙，是另一种真实。”', colors:'黑、灰、铁锈红、棕', materials:'皮革、牛仔、金属、帆布', items:['工装夹克','直筒牛仔裤','马丁靴'], accessories:'金属链、皮带、帆布包', avoid:'精致、柔美、亮色', gradient:'linear-gradient(135deg, #1c1c1c, #4a4a4a, #8d4a2f)', emoji:'🔩' },
+  quiet_luxury: { name:'静奢风', archetype:'A', desc:'低调财富、品质、反Logo；我不需要向你证明。', slogan:'“我不需要证明，但我掌控局面。”', colors:'黑、白、驼、灰、海军蓝', materials:'羊绒、真丝、精纺羊毛', items:['无Logo西装','高领针织','直筒西裤'], accessories:'小珍珠、金属表', avoid:'大Logo、荧光色、破洞', gradient:'linear-gradient(135deg, #2a2a2a, #a89684, #e8e4dc)', emoji:'💎' },
+  old_money: { name:'老钱风', archetype:'A', desc:'传统、血统、阶级与永恒；低调是权力的从容。', slogan:'“真正的优雅从不喧哗。”', colors:'驼、米、海军蓝、酒红', materials:'羊绒、粗花呢、真丝', items:['马术外套','百褶裙','乐福鞋'], accessories:'珍珠、丝巾、复古腕表', avoid:'街头、荧光、过度暴露', gradient:'linear-gradient(135deg, #c4a77d, #f0e6d2, #1a2a4a)', emoji:'🐎' },
+  power_suit: { name:'女性主义/权力套装', archetype:'A', desc:'女性进入公共权力场；用西装、垫肩、领带争取平等与可见性。', slogan:'“我穿西装，不是为了像男人。”', colors:'黑、灰、海军蓝、白', materials:'精纺羊毛、真丝、皮革', items:['垫肩西装','阔腿裤','领带'], accessories:'公文包、腕表', avoid:'柔弱、蕾丝、粉嫩', gradient:'linear-gradient(135deg, #1a1a1a, #2c3e50, #4a5568)', emoji:'👔' },
+  brutalism: { name:'粗野主义', archetype:'A', desc:'诚实暴露材料与结构；反精致、反资产阶级伪装。', slogan:'“混凝土也是诗。”', colors:'灰、黑、白、锈色', materials:'混凝土感面料、粗织、金属', items:['厚重外套','直筒裤','工装靴'], accessories:'金属、皮革', avoid:'精致、轻盈、装饰', gradient:'linear-gradient(135deg, #6d6d6d, #3a3a3a, #8d5a3a)', emoji:'🧱' },
+
+  /* ========== B 反叛边缘 ========== */
+  constructivism: { name:'构成主义', archetype:'B', desc:'服装也可以是结构、革命与集体的宣言，反装饰、反个人奢侈。', slogan:'“结构即革命。”', colors:'红、黑、白', materials:'帆布、金属、工业面料', items:['束带外套','几何剪裁裤','工装'], accessories:'金属扣、皮带', avoid:'奢华、柔美、装饰', gradient:'linear-gradient(135deg, #d32f2f, #1a1a1a, #e8e4dc)', emoji:'🔻' },
+  expressionism: { name:'表现主义', archetype:'B', desc:'外在造型应泄露内在情绪，扭曲、浓烈、不安都是真实。', slogan:'“情绪就是形状。”', colors:'浓烈撞色、暗红、深蓝', materials:'粗织、皮革、混纺', items:['不对称外套','扭曲剪裁裙','戏剧感衬衫'], accessories:'夸张耳饰、厚底鞋', avoid:'克制、极简、柔和', gradient:'linear-gradient(135deg, #8b1a1a, #2a2a5a, #1a1a1a)', emoji:'🌀' },
+  punk: { name:'朋克', archetype:'B', desc:'DIY、反体制、反时尚；用破洞与别针表达愤怒和自主。', slogan:'“我不服从，我存在。”', colors:'黑、红、白、荧光', materials:'皮革、牛仔、金属、格纹', items:['皮衣','破洞T','马丁靴'], accessories:'铆钉、安全别针、链条', avoid:'精致、温柔、保守', gradient:'linear-gradient(135deg, #1a1a1a, #9c4a4a, #1a1a1a)', emoji:'🧷' },
+  graffiti: { name:'涂鸦艺术', archetype:'B', desc:'边缘者要在城市留名；街头、身体和字母都是发声工具。', slogan:'“我在墙上签名。”', colors:'喷漆色、荧光、黑', materials:'卫衣布、牛仔、帆布', items:['宽松卫衣','涂鸦T','运动鞋'], accessories:'棒球帽、斜挎包', avoid:'正式、精致、低调', gradient:'linear-gradient(135deg, #ff4081, #00e5ff, #ffea00)', emoji:'🎨' },
+  deconstructivism: { name:'解构主义', archetype:'B', desc:'反中心、反稳定；碎片、错位、未完成即真实。', slogan:'“未完成，才是真相。”', colors:'黑、灰、白、暗色', materials:'不对称面料、毛边、混搭', items:['不对称外套','错位纽扣衬衫','层叠裤'], accessories:'解构包、金属配饰', avoid:'对称、完整、传统', gradient:'linear-gradient(135deg, #1a1a1a, #6d6d6d, #e8e4dc)', emoji:'✂️' },
+  goth: { name:'哥特', archetype:'B', desc:'黑暗浪漫、死亡意识、宗教情欲与他者身份。', slogan:'“我在黑暗中浪漫。”', colors:'全黑、深紫、暗红', materials:'蕾丝、皮革、天鹅绒', items:['蕾丝长裙','皮质束腰','厚底靴'], accessories:'十字架、choker、银饰', avoid:'荧光、运动、甜美', gradient:'linear-gradient(135deg, #0a0a0a, #2a1a2a, #1a0a1a)', emoji:'🦇' },
+  cyberpunk: { name:'赛博朋克', archetype:'B', desc:'高科技低生活；反乌托邦、身体边界、资本与技术控制。', slogan:'“高科技，低生活。”', colors:'黑、霓虹粉、青、荧光绿', materials:'皮革、PVC、尼龙、反光', items:['机能夹克','绑带裤','战术靴'], accessories:'护目镜、发光配饰', avoid:'田园、碎花、温柔', gradient:'linear-gradient(135deg, #0a0a0a, #ff006e, #00f5ff)', emoji:'🌃' },
+  lowbrow: { name:'低眉/街头怪诞', archetype:'B', desc:'地下反精英；怪诞、漫画、滑板文化挑战正统趣味。', slogan:'“怪，也是一种态度。”', colors:'亮色、黑、卡通色', materials:'棉、帆布、涂鸦面料', items:['怪诞印花T','宽松裤','滑板鞋'], accessories:'漫画配饰、棒球帽', avoid:'正统、优雅、严肃', gradient:'linear-gradient(135deg, #ff6b6b, #ffd93d, #6bcb77)', emoji:'👾' },
+  grunge: { name:'Grunge', archetype:'B', desc:'反时尚、反精致；颓废、真实、X世代的疏离与不合作。', slogan:'“我不精致，但真实。”', colors:'暗灰、褪色黑、酒红、橄榄绿', materials:'法兰绒、旧牛仔、粗针织', items:['法兰绒衬衫','破洞牛仔','马丁靴'], accessories:'毛线帽、旧包', avoid:'精致、亮色、高跟鞋', gradient:'linear-gradient(135deg, #3a3a3a, #5a4a3a, #2a2a2a)', emoji:'🎸' },
+  emo: { name:'Emo/哥特亚文化', archetype:'B', desc:'情绪、敏感、边缘；用黑白与眼线确认同类身份。', slogan:'“我的情绪，就是我的风格。”', colors:'黑、白、深红', materials:'紧身牛仔、band tee、帆布', items:['乐队T','紧身裤','帆布鞋'], accessories:'眼线、铆钉手环', avoid:'阳光、运动、甜美', gradient:'linear-gradient(135deg, #1a1a1a, #4a1a1a, #e8e4dc)', emoji:'🖤' },
+  wasteland: { name:'废土风', archetype:'B', desc:'末日生存、韧性、反消费；机能与层叠是实用主义美学。', slogan:'“世界崩了，我还站着。”', colors:'沙色、军绿、锈棕、灰', materials:'做旧棉、帆布、皮革、绑带', items:['做旧外套','机能裤','绑带靴'], accessories:'护目镜、战术包', avoid:'干净、精致、亮色', gradient:'linear-gradient(135deg, #a89060, #4a5a3a, #6d4a2a)', emoji:'🏜️' },
+
+  /* ========== C 怀旧浪漫 ========== */
+  artdeco: { name:'装饰艺术 Art Deco', archetype:'C', desc:'现代性不必苦行，机器时代也可以奢华、享乐、几何化。', slogan:'“奢华，也可以很几何。”', colors:'金、黑、翡翠绿、酒红', materials:'丝绒、真丝、珠绣、缎面', items:['珠绣长裙','真丝衬衫','长手套'], accessories:'珍珠、金饰、头饰', avoid:'朴素、运动、极简', gradient:'linear-gradient(135deg, #c9a86a, #1a1a1a, #2a5a4a)', emoji:'✨' },
+  surrealism: { name:'超现实主义', archetype:'C', desc:'穿衣是潜意识出口；梦、欲望、错视可以穿在身上。', slogan:'“梦，是最好的裁缝。”', colors:'超现实撞色、黑白', materials:'印花、错视面料、混搭', items:['眼睛印花衬衫','错视裙','怪诞配饰'], accessories:'超现实包、怪诞首饰', avoid:'常规、实用、保守', gradient:'linear-gradient(135deg, #6a5acd, #ff6b9d, #ffd93d)', emoji:'👁️' },
+  postmodern: { name:'后现代主义', archetype:'C', desc:'反宏大叙事；历史、符号、风格可以拼贴、戏仿、混搭。', slogan:'“一切风格，都是引用。”', colors:'混搭、高饱和、复古色', materials:'混纺、印花、拼贴', items:['拼贴外套','历史元素混搭','戏谑印花'], accessories:'夸张耳饰、混搭包', avoid:'单一、纯粹、极简', gradient:'linear-gradient(135deg, #ff4081, #7c4dff, #00e5ff)', emoji:'🎭' },
+  postmodern_classical: { name:'后现代古典', archetype:'C', desc:'历史符号被重新编码；怀旧、权力、折衷主义并存。', slogan:'“历史是我的戏服。”', colors:'金、黑、酒红、象牙白', materials:'丝绒、缎面、珠绣', items:['垫肩西装','珠绣长裙','真丝衬衫'], accessories:'珍珠、胸针、金饰', avoid:'运动、休闲、塑料感', gradient:'linear-gradient(135deg, #c9a86a, #1a1a1a, #6a1a2a)', emoji:'🏛️' },
+  wabisabi: { name:'侘寂', archetype:'C', desc:'残缺、无常、朴素；美在时间痕迹与不完美。', slogan:'“不完美才是真实。”', colors:'米、灰、褐、苔绿、陶土', materials:'棉麻、粗织、天然染、做旧', items:['亚麻长衫','宽松长裤','布鞋'], accessories:'木质、陶质、旧银', avoid:'亮色、Logo、紧身', gradient:'linear-gradient(135deg, #d7cfc0, #8a8272, #6b7a5a)', emoji:'🍂' },
+  bohemian: { name:'波西米亚', archetype:'C', desc:'自由、游牧、反主流；手工艺、精神性与非制度化生活。', slogan:'“自由，是我的风格。”', colors:'大地色、酒红、橄榄绿', materials:'棉麻、流苏、刺绣、皮革', items:['流苏长裙','刺绣上衣','宽檐帽'], accessories:'民族首饰、编织包', avoid:'正式、极简、冷感', gradient:'linear-gradient(135deg, #a8805a, #6a1a2a, #4a5a3a)', emoji:'🌾' },
+  lolita: { name:'洛丽塔', archetype:'C', desc:'少女幻想、维多利亚怀旧；用精致规则建造逃避现实的壳。', slogan:'“在蕾丝里，我是自己的公主。”', colors:'粉、白、黑、酒红', materials:'蕾丝、荷叶边、缎面、衬裙', items:['洛丽塔裙','蕾丝衬衫','蝴蝶结'], accessories:'发带、蕾丝袜、洋伞', avoid:'运动、街头、极简', gradient:'linear-gradient(135deg, #ffb6c1, #e8e4dc, #1a1a1a)', emoji:'🎀' },
+  post_internet: { name:'后互联网', archetype:'C', desc:'屏幕即现实；身份是复制、表演、怀旧与算法碎片。', slogan:'“我在屏幕里，也在屏幕外。”', colors:'屏幕色、数字渐变、低清色', materials:'反光、印花、混搭', items:['数字印花T','透明外套','低腰裤'], accessories:'虚拟感配饰、大墨镜', avoid:'传统、自然、手工', gradient:'linear-gradient(135deg, #7c4dff, #00e5ff, #ff4081)', emoji:'💻' },
+  vaporwave: { name:'蒸汽波/合成器浪潮', archetype:'C', desc:'消费怀旧与资本主义废墟；霓虹乌托邦带着讽刺。', slogan:'“我怀念一个从未存在的未来。”', colors:'粉紫、青、霓虹、棕榈绿', materials:'反光、渐变、复古面料', items:['复古西装','霓虹配饰','印花衬衫'], accessories:'墨镜、透明包', avoid:'朴素、自然、手工', gradient:'linear-gradient(135deg, #ff6ec7, #7c4dff, #00e5ff)', emoji:'🌴' },
+  dreamcore: { name:'梦核/怪诞核/阈限空间', archetype:'C', desc:'数字无意识；童年记忆、不安、超现实与空荡。', slogan:'“梦里的空间，比现实更真。”', colors:'低饱和、模糊色、粉蓝', materials:'柔软、旧感、混搭', items:['旧感卫衣','宽松裤','拖鞋'], accessories:'童年配饰、怪诞小物', avoid:'锐利、正式、高饱和', gradient:'linear-gradient(135deg, #b8c6db, #d4c5e2, #f5e6d3)', emoji:'🌙' },
+  dark_academia: { name:'Dark Academia', archetype:'C', desc:'知识浪漫、古典怀旧、死亡意识；对精英传统的向往与批判。', slogan:'“我在旧书里寻找灵魂。”', colors:'棕、黑、酒红、墨绿、米', materials:'羊毛、格纹呢、皮革', items:['白衬衫','针织背心','西装外套','乐福鞋'], accessories:'领带、复古腕表、皮书包', avoid:'荧光、运动、暴露', gradient:'linear-gradient(135deg, #3a2a1a, #1a1a1a, #2a3a2a)', emoji:'📚' },
+  light_academia: { name:'Light Academia', archetype:'C', desc:'温柔求知、乐观审美；学习也可以明亮、柔软、社交化。', slogan:'“知识，也可以很明亮。”', colors:'米白、驼、浅蓝、柔粉', materials:'棉、针织、亚麻', items:['针织开衫','百褶裙','帆布鞋'], accessories:'丝巾、帆布包、书', avoid:'暗黑、沉重、过度正式', gradient:'linear-gradient(135deg, #f5f1e8, #c4a77d, #a8c0d8)', emoji:'📖' },
+  maillard: { name:'美拉德风', archetype:'C', desc:'温暖、稳定、季节感；用大地色寻求安全与复古。', slogan:'“大地色，是秋天的诗。”', colors:'棕、橘、焦糖、米', materials:'羊毛、针织、麂皮', items:['棕色大衣','针织衫','直筒裤'], accessories:'皮革包、金色配饰', avoid:'荧光、冷色、运动', gradient:'linear-gradient(135deg, #8b5a2b, #c47a3a, #d4a574)', emoji:'🍁' },
+  digital_baroque: { name:'数字巴洛克', archetype:'C', desc:'虚拟过剩、感官刺激；技术时代的繁复装饰。', slogan:'“在虚拟世界里，繁复即正义。”', colors:'银紫、镭射、渐变、金', materials:'反光、3D打印感、液态金属', items:['镭射外套','立体装饰上衣','未来感裙'], accessories:'发光耳饰、透明包', avoid:'朴素、自然、极简', gradient:'linear-gradient(135deg, #b0a8d8, #e8d4ff, #a8d8e8)', emoji:'💠' },
+
+  /* ========== D 享乐消费 ========== */
+  popart: { name:'波普艺术', archetype:'D', desc:'消费社会就是新自然；广告、商标、明星皆可成为高级符号。', slogan:'“消费，就是艺术。”', colors:'高饱和、荧光、漫画色', materials:'塑料、亮片、印花布', items:['漫画印花T','亮色外套','撞色裤'], accessories:'夸张耳环、塑料包', avoid:'低调、朴素、自然', gradient:'linear-gradient(135deg, #ff1744, #ffea00, #2979ff)', emoji:'💥' },
+  opart: { name:'欧普艺术', archetype:'D', desc:'衣服可以是一场视觉实验，挑战感知、制造动感与幻觉。', slogan:'“眼见不一定为实。”', colors:'黑白、高对比、几何', materials:'印花、弹力面料', items:['条纹衬衫','棋盘格裙','视错觉外套'], accessories:'几何包、墨镜', avoid:'柔和、自然、低调', gradient:'linear-gradient(135deg, #1a1a1a, #e8e4dc, #1a1a1a)', emoji:'🔲' },
+  disco: { name:'迪斯科', archetype:'D', desc:'舞池是少数群体的解放空间；闪耀、享乐、身体自由。', slogan:'“身体要发光。”', colors:'金、银、黑、紫、亮片', materials:'亮片、金属感、弹力布', items:['亮片裙','紧身连体衣','高跟靴'], accessories:'大耳环、金属包', avoid:'朴素、哑光、保守', gradient:'linear-gradient(135deg, #ffd700, #1a1a1a, #7c4dff)', emoji:'🪩' },
+  glamrock: { name:'华丽摇滚', archetype:'D', desc:'性别是表演，不是牢笼；越界、夸张、舞台化自我。', slogan:'“性别是表演，风格是自由。”', colors:'亮片、荧光、金银', materials:'亮片、羽毛、皮革', items:['亮片外套','厚底靴','夸张墨镜'], accessories:'羽毛、金属、舞台妆', avoid:'朴素、低调、传统', gradient:'linear-gradient(135deg, #ff4081, #ffd700, #00e5ff)', emoji:'🌟' },
+  memphis: { name:'孟菲斯', archetype:'D', desc:'反功能、反好品味；用亮色几何戏谑现代主义的严肃。', slogan:'“好品味，就是坏品味。”', colors:'亮粉、明黄、翠绿、蓝', materials:'塑料、几何印花、亮面', items:['几何印花衬衫','撞色裤','趣味配饰'], accessories:'几何耳环、彩色包', avoid:'单调、严肃、传统', gradient:'linear-gradient(135deg, #ff6ec7, #ffea00, #00e5a0)', emoji:'🔷' },
+  y2k: { name:'Y2K', archetype:'D', desc:'千禧乐观、科技乌托邦、青春消费；未来是闪亮、透明、性感的。', slogan:'“未来是闪亮、低腰、透明的。”', colors:'银、粉、蓝、荧光、金属', materials:'PVC、金属感、透明、莱卡', items:['低腰裤','短上衣','透明外套','厚底鞋'], accessories:'蝴蝶发夹、窄框墨镜', avoid:'极简、沉稳、大地色', gradient:'linear-gradient(135deg, #c0c0c0, #ff6ec7, #00e5ff)', emoji:'💿' },
+  streetwear: { name:'街头潮流', archetype:'D', desc:'身份、社群与嘻哈文化；酷被资本化，也仍是归属标记。', slogan:'“酷，是一种归属。”', colors:'黑、白、荧光、Logo色', materials:'卫衣布、牛仔、帆布', items:['Logo卫衣','工装裤','球鞋'], accessories:'棒球帽、斜挎包、链子', avoid:'正式、精致、保守', gradient:'linear-gradient(135deg, #1a1a1a, #e8e4dc, #ffea00)', emoji:'🧢' },
+  superflat: { name:'超扁平/原宿', archetype:'D', desc:'动漫、可爱、平面化；亚文化、消费主义与日本软实力。', slogan:'“可爱，是一种力量。”', colors:'糖果色、粉、蓝、黄', materials:'印花、棉、亮面', items:['动漫印花T','短裙','彩色袜'], accessories:'卡通包、发夹', avoid:'成熟、正式、暗色', gradient:'linear-gradient(135deg, #ffb6c1, #a8e6ff, #fff59d)', emoji:'🌸' },
+  maximalism: { name:'极繁主义', archetype:'D', desc:'过剩即包容；表现欲、拼贴、文化混血与视觉狂欢。', slogan:'“多，就是多。”', colors:'所有颜色、撞色、印花', materials:'混搭、刺绣、亮片、皮革', items:['印花外套','层叠裙','夸张配饰'], accessories:'多层项链、大耳环', avoid:'极简、单调、朴素', gradient:'linear-gradient(135deg, #ff4081, #ffea00, #7c4dff, #00e5a0)', emoji:'🌈' },
+  dopamine: { name:'多巴胺穿搭', archetype:'D', desc:'快乐、疗愈、反抗灰暗；情绪就是造型理由。', slogan:'“我穿的是情绪。”', colors:'明黄、亮粉、翠绿、宝蓝', materials:'棉、针织、亮面、趣味印花', items:['亮色卫衣','撞色长裤','彩色运动鞋'], accessories:'彩色包、夸张耳环', avoid:'全黑、沉闷、无趣', gradient:'linear-gradient(135deg, #ffea00, #ff4081, #00e5a0)', emoji:'🍬' },
+  barbiecore: { name:'Barbiecore', archetype:'D', desc:'粉色力量、玩偶怀旧、性别表演；消费主义也可以戏谑。', slogan:'“粉色是武器。”', colors:'芭比粉、亮粉、白、亮黄', materials:'塑料感、亮片、缎面、毛绒', items:['粉色迷你裙','短上衣','亮片外套'], accessories:'蝴蝶结、塑料包、墨镜', avoid:'深色、极简、严肃', gradient:'linear-gradient(135deg, #ff69b4, #ffb6c1, #e8e4dc)', emoji:'💗' },
+  balletcore: { name:'Balletcore', archetype:'D', desc:'柔美、纪律、浪漫；女性气质被审美化也被人设化。', slogan:'“柔美，也是一种纪律。”', colors:'粉、白、裸色、灰', materials:'纱、针织、缎面、丝带', items:['纱裙','绑带鞋','针织开衫'], accessories:'丝带、发夹、小包', avoid:'硬朗、暗黑、运动', gradient:'linear-gradient(135deg, #ffd1dc, #f5f1e8, #e8d4c0)', emoji:'🩰' },
+
+  /* ========== E 未来数字 ========== */
+  space_age: { name:'太空时代', archetype:'E', desc:'科技乐观主义与宇宙想象；塑料、金属、银色代表未来乌托邦。', slogan:'“明天会更好。”', colors:'银、白、亮橙、太空蓝', materials:'PVC、金属、亮面、塑料', items:['银色A字裙','PVC外套','头盔帽'], accessories:'护目镜、银色包', avoid:'复古、大地色、蕾丝', gradient:'linear-gradient(135deg, #c0c0c0, #e8e4dc, #ff6f00)', emoji:'🚀' },
+  new_wave: { name:'新浪潮', archetype:'E', desc:'冷感、科技异化与未来怀旧；酷是一种距离感。', slogan:'“酷，是一种距离。”', colors:'黑、白、灰、冷蓝', materials:'合成面料、金属、皮革', items:['窄领西装','直筒裤','墨镜'], accessories:'金属表、极简包', avoid:'温暖、繁复、自然', gradient:'linear-gradient(135deg, #1a1a1a, #e8e4dc, #4a6a8a)', emoji:'🎹' },
+  cyborg: { name:'赛博格', archetype:'E', desc:'人机融合、后性别、边界消解；身体是可以改造的界面。', slogan:'“身体是界面。”', colors:'黑、银、白、冷蓝', materials:'金属、透明、弹力、仿生', items:['紧身连体衣','透明外套','绑带靴'], accessories:'义体感配饰、面具', avoid:'田园、甜美、复古', gradient:'linear-gradient(135deg, #1a1a1a, #a8b8c8, #4a6a8a)', emoji:'🤖' },
+  posthuman: { name:'后人类', archetype:'E', desc:'边界消解、增强、非人；身份不再由肉体固定。', slogan:'“我不是人，我是接口。”', colors:'冷色、金属、透明', materials:'科技面料、仿生材质', items:['机能外套','不对称裤','未来感配饰'], accessories:'智能穿戴、发光物', avoid:'传统、自然、手工', gradient:'linear-gradient(135deg, #7e8fa0, #c8d4e0, #4a5a6a)', emoji:'🧬' },
+  ai_fashion: { name:'AI生成/虚拟时尚', archetype:'E', desc:'后人类、超真实、无身体；服装可以脱离物理限制。', slogan:'“我不需要肉身。”', colors:'超现实、渐变、发光色', materials:'数字感、反光、3D打印', items:['虚拟感外套','超现实印花','发光配饰'], accessories:'数字配饰、AR眼镜', avoid:'自然、朴素、传统', gradient:'linear-gradient(135deg, #b0a8d8, #e8d4ff, #a8e8e8)', emoji:'✨' },
+  afrofuturism: { name:'Afrofuturism', archetype:'E', desc:'黑人未来与解放；非洲传统、科技与身份重构。', slogan:'“非洲，也是未来。”', colors:'金、紫、绿、黑、亮色', materials:'非洲印花、金属、科技面料', items:['非洲印花外套','金属配饰','未来剪裁'], accessories:'大胆珠宝、头饰', avoid:'殖民、传统、保守', gradient:'linear-gradient(135deg, #ffd700, #7c4dff, #00a86b)', emoji:'🌍' },
+  asian_futurism: { name:'Asian Futurism', archetype:'E', desc:'亚洲现代性与去殖民；传统元素进入未来想象。', slogan:'“传统，也可以是未来。”', colors:'红、金、黑、霓虹', materials:'丝绸、科技面料、混搭', items:['解构旗袍','机能汉服','霓虹配饰'], accessories:'传统+科技配饰', avoid:'刻板、殖民、保守', gradient:'linear-gradient(135deg, #d32f2f, #ffd700, #1a1a1a)', emoji:'🏮' },
+
+  /* ========== F 自然共生 ========== */
+  cottagecore: { name:'Cottagecore', archetype:'F', desc:'逃离现代性；田园、慢生活、女性乌托邦与生态幻想。', slogan:'“回到土地与手作。”', colors:'奶油白、柔粉、鼠尾草绿、浅棕', materials:'棉、亚麻、蕾丝、粗针织', items:['碎花连衣裙','蕾丝衬衫','草编鞋'], accessories:'草编包、丝带、野花', avoid:'机能、荧光、皮革', gradient:'linear-gradient(135deg, #f5f1e0, #e8c4c4, #a8c0a0)', emoji:'🌿' },
+  goblincore: { name:'Goblincore', archetype:'F', desc:'拥抱怪诞、泥土、苔藓；反整洁、反可爱霸权，边缘也可爱。', slogan:'“苔藓、蘑菇、边缘也可爱。”', colors:'苔藓绿、蘑菇褐、泥土色', materials:'粗织、旧棉、皮革、手工', items:['旧毛衣','工装裤','旧靴'], accessories:'蘑菇配饰、布袋', avoid:'精致、亮片、高跟鞋', gradient:'linear-gradient(135deg, #4a5a3a, #6d4a2a, #8a7a5a)', emoji:'🍄' },
+  solarpunk: { name:'Solarpunk', archetype:'F', desc:'生态乐观主义；技术、社群与自然可以共生而非对立。', slogan:'“科技与自然，一起生长。”', colors:'翠绿、亮黄、白、天蓝、金', materials:'天然纤维+科技混纺、植物染', items:['植物印花衬衫','机能裤','再生外套'], accessories:'太阳能感配饰、植物胸针', avoid:'末世感、全黑、颓废', gradient:'linear-gradient(135deg, #00c853, #ffea00, #00b0ff)', emoji:'☀️' },
+  eco_aesthetic: { name:'生态美学', archetype:'F', desc:'可持续、责任、共生；反浪费，穿衣也承担伦理。', slogan:'“我的选择，就是我的立场。”', colors:'苔藓绿、陶土、米、褐、雾灰', materials:'有机棉、天然染、手工织', items:['棉麻长衫','宽松长裤','手工针织'], accessories:'木质、石质、编织', avoid:'荧光、塑料、大Logo', gradient:'linear-gradient(135deg, #6b7a5a, #b87a5a, #d7cfc0)', emoji:'🌱' },
+  nature_healing: { name:'自然疗愈', archetype:'F', desc:'平静、疗愈、与自然同频；穿衣是自我照顾的方式。', slogan:'“我与自然同频。”', colors:'雾灰、浅绿、米白、淡蓝', materials:'棉、麻、丝、软针织', items:['宽松长裙','软针织开衫','平底鞋'], accessories:'木珠、石饰、帆布包', avoid:'紧身、亮色、金属', gradient:'linear-gradient(135deg, #c8d4c0, #a8b8a0, #e8e4dc)', emoji:'🍃' }
+};
+
+/* ============================================================
+   题目（30题）
+   ============================================================ */
+const PHASES = ['存在基调','身体与表达','时间与归属','社会与选择','深层渴望'];
+const QUESTIONS = [
+  { phase:0, text:'清晨刚醒来时，你的大脑通常处于哪种状态？', sub:'凭第一感觉。', options:[
+    { text:'立刻开始盘算今天要完成的事', styles:['bauhaus','international','quiet_luxury'] },
+    { text:'有点抗拒，不想按别人的节奏来', styles:['punk','grunge','deconstructivism'] },
+    { text:'还停留在刚才的梦里，或想起某段回忆', styles:['surrealism','dreamcore','wabisabi'] },
+    { text:'开始期待今天有什么新鲜好玩的事', styles:['dopamine','barbiecore','y2k'] }
+  ]},
+  { phase:0, text:'上网浏览时，你的注意力最容易被哪类内容吸引？', sub:'实际会停下来的内容。', options:[
+    { text:'效率方法、行业分析、专业干货', styles:['minimalism','power_suit','hitech'] },
+    { text:'亚文化、地下艺术、反叛边缘的故事', styles:['lowbrow','graffiti','emo'] },
+    { text:'怀旧影像、古典文学、历史旧物', styles:['dark_academia','artdeco','postmodern_classical'] },
+    { text:'科技前沿、AI、虚拟世界、未来想象', styles:['cyborg','ai_fashion','space_age'] }
+  ]},
+  { phase:0, text:'你最向往的生活场景是——', sub:'想象你可以立刻搬进去。', options:[
+    { text:'老图书馆、雨天、旧书与咖啡', styles:['dark_academia','light_academia','wabisabi'] },
+    { text:'霓虹城市、派对、永远不睡的夜晚', styles:['disco','y2k','cyberpunk'] },
+    { text:'元宇宙、太空站、无限延伸的屏幕', styles:['posthuman','ai_fashion','new_wave'] },
+    { text:'山谷、海边、自给自足的小屋', styles:['cottagecore','eco_aesthetic','nature_healing'] }
+  ]},
+  { phase:0, text:'你更相信哪种“美”？', sub:'哪种更真。', options:[
+    { text:'秩序、结构、功能', styles:['bauhaus','brutalism','industrial'] },
+    { text:'时间痕迹、残缺、故事', styles:['wabisabi','bohemian','artdeco'] },
+    { text:'超现实、未来感、数字感', styles:['digital_baroque','vaporwave','cyborg'] },
+    { text:'自然、手工、有机', styles:['cottagecore','solarpunk','goblincore'] }
+  ]},
+  { phase:0, text:'如果只能保留一种材质，你选——', sub:'触感是最诚实的审美。', options:[
+    { text:'皮革', styles:['punk','industrial','goth'] },
+    { text:'棉麻', styles:['eco_aesthetic','cottagecore','wabisabi'] },
+    { text:'羊绒', styles:['quiet_luxury','old_money','minimalism'] },
+    { text:'亮片或金属感面料', styles:['disco','y2k','glamrock'] }
+  ]},
+  { phase:1, text:'你更愿意被描述为——', sub:'别人在背后怎么评价你，你最不反感？', options:[
+    { text:'危险而真实', styles:['punk','goth','wasteland'] },
+    { text:'有趣而耀眼', styles:['dopamine','barbiecore','maximalism'] },
+    { text:'可靠而专业', styles:['quiet_luxury','power_suit','minimal_revival'] },
+    { text:'深情而有故事', styles:['dark_academia','bohemian','postmodern_classical'] }
+  ]},
+  { phase:1, text:'哪种画面最让你心动？', sub:'闭上眼睛，你会走进哪一个。', options:[
+    { text:'赛博都市、雨夜霓虹', styles:['cyberpunk','vaporwave','new_wave'] },
+    { text:'苔藓森林、蘑菇与露水', styles:['goblincore','cottagecore','nature_healing'] },
+    { text:'废弃工厂、涂鸦与地下演出', styles:['graffiti','industrial','lowbrow'] },
+    { text:'金色舞池、亮片与闪光灯', styles:['disco','glamrock','y2k'] }
+  ]},
+  { phase:1, text:'你如何看待“身体”？', sub:'你和世界之间最直接的界面。', options:[
+    { text:'工具，要高效、克制、可控', styles:['minimalism','international','bauhaus'] },
+    { text:'容器，承载记忆与情绪', styles:['wabisabi','bohemian','expressionism'] },
+    { text:'战场，要发声、要反抗', styles:['punk','constructivism','graffiti'] },
+    { text:'界面，可以被改造与增强', styles:['cyborg','posthuman','ai_fashion'] }
+  ]},
+  { phase:1, text:'你的衣柜里最舍不得丢的是——', sub:'那件你反复穿、反复留的东西。', options:[
+    { text:'一件有故事的旧衣服', styles:['wabisabi','bohemian','artdeco'] },
+    { text:'一件穿上就被注目的衣服', styles:['dopamine','maximalism','barbiecore'] },
+    { text:'一件剪裁完美的经典款', styles:['quiet_luxury','minimalism','old_money'] },
+    { text:'一件自己改造过的衣服', styles:['punk','deconstructivism','graffiti'] }
+  ]},
+  { phase:1, text:'你更常进入哪种情绪？', sub:'实际最常待着的。', options:[
+    { text:'冷感、抽离、超然', styles:['new_wave','cyborg','minimalism'] },
+    { text:'平静、疗愈、与自然同频', styles:['nature_healing','eco_aesthetic','cottagecore'] },
+    { text:'怀旧、忧郁、柔软', styles:['dark_academia','wabisabi','post_internet'] },
+    { text:'兴奋、快乐、高能', styles:['dopamine','disco','memphis'] }
+  ]},
+  { phase:2, text:'面对一个不合理的规则，你会——', sub:'最真实的反应。', options:[
+    { text:'找到系统内的最优解', styles:['quiet_luxury','power_suit','hitech'] },
+    { text:'直接打破它', styles:['punk','constructivism','deconstructivism'] },
+    { text:'绕开它，建立新规则', styles:['solarpunk','posthuman','cyborg'] },
+    { text:'慢慢修复，或者直接离开', styles:['eco_aesthetic','cottagecore','wabisabi'] }
+  ]},
+  { phase:2, text:'你更常做的梦是——', sub:'梦比清醒时更诚实。', options:[
+    { text:'回到某个旧场景，见到旧人', styles:['artdeco','postmodern_classical','dark_academia'] },
+    { text:'在霓虹城市里奔跑', styles:['cyberpunk','vaporwave','y2k'] },
+    { text:'在废墟中生存', styles:['wasteland','industrial','brutalism'] },
+    { text:'在森林或海边，安静地待着', styles:['nature_healing','cottagecore','goblincore'] }
+  ]},
+  { phase:2, text:'你希望别人在你身上感受到——', sub:'第一印象，你最想传递什么。', options:[
+    { text:'不好惹', styles:['punk','goth','wasteland'] },
+    { text:'有故事', styles:['dark_academia','bohemian','postmodern'] },
+    { text:'很酷、很未来', styles:['cyborg','new_wave','ai_fashion'] },
+    { text:'很可靠', styles:['quiet_luxury','power_suit','minimal_revival'] }
+  ]},
+  { phase:2, text:'你更不能忍受的是——', sub:'哪一种情况让你最想逃离。', options:[
+    { text:'被规训、被要求合群', styles:['punk','grunge','emo'] },
+    { text:'无聊、沉闷、没有乐趣', styles:['dopamine','memphis','disco'] },
+    { text:'肤浅、没有深度', styles:['dark_academia','postmodern_classical','artdeco'] },
+    { text:'浪费、破坏、不自然', styles:['eco_aesthetic','solarpunk','cottagecore'] }
+  ]},
+  { phase:2, text:'如果有一笔钱，你会优先——', sub:'不考虑投资回报。', options:[
+    { text:'投资一件经典单品，穿十年', styles:['quiet_luxury','old_money','minimalism'] },
+    { text:'买最新的科技设备或虚拟资产', styles:['cyborg','ai_fashion','posthuman'] },
+    { text:'办一场派对，或买一件闪亮的衣服', styles:['disco','glamrock','barbiecore'] },
+    { text:'去自然里住一段时间，或买手工好物', styles:['cottagecore','eco_aesthetic','goblincore'] }
+  ]},
+  { phase:3, text:'你在社交媒体上更常——', sub:'你真实发布的内容。', options:[
+    { text:'分享专业见解、干货', styles:['minimalism','power_suit','hitech'] },
+    { text:'发漂亮照片、生活碎片', styles:['dopamine','barbiecore','y2k'] },
+    { text:'关注科技、虚拟、AI趋势', styles:['cyborg','ai_fashion','digital_baroque'] },
+    { text:'记录自然、植物、手工、慢生活', styles:['cottagecore','eco_aesthetic','nature_healing'] }
+  ]},
+  { phase:3, text:'你更认同哪种身份？', sub:'你希望被看作。', options:[
+    { text:'专业精英', styles:['quiet_luxury','power_suit','old_money'] },
+    { text:'局外人', styles:['punk','grunge','lowbrow'] },
+    { text:'浪漫主义者', styles:['bohemian','dark_academia','artdeco'] },
+    { text:'享乐主义者', styles:['disco','dopamine','maximalism'] }
+  ]},
+  { phase:3, text:'你的社交能量是——', sub:'最自然的社交状态。', options:[
+    { text:'克制、专业、少而精', styles:['minimalism','quiet_luxury','international'] },
+    { text:'小圈子亚文化，同类相认', styles:['emo','goth','lowbrow'] },
+    { text:'深度长谈，一对一的浪漫', styles:['dark_academia','bohemian','wabisabi'] },
+    { text:'派对动物，人群里发光', styles:['disco','dopamine','glamrock'] }
+  ]},
+  { phase:3, text:'冲突发生时，你更可能——', sub:'你的真实反应。', options:[
+    { text:'讲逻辑，找最优解', styles:['bauhaus','minimalism','hitech'] },
+    { text:'直接反击，不留情面', styles:['punk','constructivism','expressionism'] },
+    { text:'写诗、怀旧、消化情绪', styles:['dark_academia','bohemian','wabisabi'] },
+    { text:'跳舞、购物、转移注意', styles:['disco','dopamine','y2k'] }
+  ]},
+  { phase:3, text:'你希望衣服最后留下什么印象——', sub:'你希望被如何记住。', options:[
+    { text:'可靠', styles:['quiet_luxury','old_money','minimal_revival'] },
+    { text:'危险', styles:['punk','goth','wasteland'] },
+    { text:'有故事', styles:['dark_academia','artdeco','postmodern_classical'] },
+    { text:'好玩', styles:['dopamine','barbiecore','memphis'] }
+  ]},
+  { phase:4, text:'你最想拥有的“超能力”是——', sub:'不限于物理规则。', options:[
+    { text:'永远快乐，让人快乐', styles:['dopamine','disco','barbiecore'] },
+    { text:'与万物沟通，治愈一切', styles:['nature_healing','eco_aesthetic','cottagecore'] },
+    { text:'穿越到未来，或进入虚拟世界', styles:['cyborg','ai_fashion','posthuman'] },
+    { text:'回到过去，改变一件事', styles:['artdeco','dark_academia','vaporwave'] }
+  ]},
+  { phase:4, text:'你更倾向于哪种“未来”？', sub:'你希望世界走向。', options:[
+    { text:'高科技、高效率、秩序井然', styles:['hitech','international','bauhaus'] },
+    { text:'生态、社群、与自然共生', styles:['solarpunk','eco_aesthetic','cottagecore'] },
+    { text:'虚拟、自由、边界消解', styles:['posthuman','ai_fashion','digital_baroque'] },
+    { text:'复古、稳定、回到黄金年代', styles:['old_money','artdeco','midcentury'] }
+  ]},
+  { phase:4, text:'你更愿意穿哪种印花？', sub:'图案是思想的直接表达。', options:[
+    { text:'几何、色块、直线', styles:['bauhaus','opart','memphis'] },
+    { text:'碎花、植物、自然', styles:['cottagecore','bohemian','nature_healing'] },
+    { text:'涂鸦、字母、标语', styles:['graffiti','streetwear','punk'] },
+    { text:'超现实、错视、数字', styles:['surrealism','vaporwave','digital_baroque'] }
+  ]},
+  { phase:4, text:'你更接受哪种“不完美”？', sub:'你的容忍度。', options:[
+    { text:'不对称、未完成、解构', styles:['deconstructivism','expressionism','postmodern'] },
+    { text:'时间痕迹、褪色、磨损', styles:['wabisabi','grunge','industrial'] },
+    { text:'怪诞、丑萌、反精致', styles:['lowbrow','goblincore','memphis'] },
+    { text:'数字故障、失真、低清', styles:['vaporwave','dreamcore','post_internet'] }
+  ]},
+  { phase:4, text:'你更希望别人怎么形容你的风格？', sub:'最后一题。', options:[
+    { text:'高级、克制、有品位', styles:['quiet_luxury','minimalism','old_money'] },
+    { text:'酷、危险、有态度', styles:['punk','goth','cyberpunk'] },
+    { text:'浪漫、有故事、有深度', styles:['dark_academia','bohemian','artdeco'] },
+    { text:'快乐、耀眼、有活力', styles:['dopamine','disco','barbiecore'] }
+  ]}
+];
+
+/* ============================================================
+   状态与工具
+   ============================================================ */
+const state = { current: 0, answers: new Array(QUESTIONS.length).fill(null) };
+function $(id) { return document.getElementById(id); }
+function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); $(id).classList.add('active'); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+
+/* ============================================================
+   答题渲染
+   ============================================================ */
+function renderQuestion() {
+  const q = QUESTIONS[state.current];
+  const total = QUESTIONS.length;
+  $('phase-label').textContent = PHASES[q.phase];
+  $('progress-count').textContent = String(state.current + 1).padStart(2, '0') + ' / ' + total;
+  $('progress-fill').style.width = ((state.current + 1) / total * 100) + '%';
+  $('q-title').textContent = q.text;
+  $('q-sub').textContent = q.sub || '';
+  const box = $('q-options');
+  const letters = ['A', 'B', 'C', 'D'];
+  box.innerHTML = q.options.map((opt, i) => `
+    <button class="option ${state.answers[state.current] === i ? 'selected' : ''}" data-index="${i}">
+      <span class="badge">${letters[i]}</span>
+      <span class="opt-text">${opt.text}</span>
+    </button>
+  `).join('');
+  box.querySelectorAll('.option').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.answers[state.current] = parseInt(btn.dataset.index, 10);
+      box.querySelectorAll('.option').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      updateNav();
+      if (state.current < total - 1) { setTimeout(() => { state.current++; renderQuestion(); }, 280); }
+    });
+  });
+  updateNav();
+}
+
+function updateNav() {
+  const hasAnswer = state.answers[state.current] !== null;
+  const isFirst = state.current === 0;
+  const isLast = state.current === QUESTIONS.length - 1;
+  $('btn-prev').style.visibility = isFirst ? 'hidden' : 'visible';
+  if (isLast) {
+    $('btn-next').style.visibility = 'visible';
+    $('btn-next').textContent = '查看结果';
+    $('btn-next').disabled = !hasAnswer;
+    $('btn-next').style.opacity = hasAnswer ? '1' : '.4';
+  } else {
+    $('btn-next').style.visibility = 'hidden';
+  }
+}
+
+/* ============================================================
+   结果计算
+   ============================================================ */
+function computeResult() {
+  const styleScores = {};
+  Object.keys(STYLES).forEach(k => styleScores[k] = 0);
+
+  state.answers.forEach((optIndex, qIndex) => {
+    const opt = QUESTIONS[qIndex].options[optIndex];
+    if (opt && opt.styles) {
+      opt.styles.forEach(sid => { if (styleScores[sid] !== undefined) styleScores[sid] += 1; });
+    }
+  });
+
+  const rankedStyles = Object.entries(styleScores).sort((a, b) => b[1] - a[1]);
+  const topStyleId = rankedStyles[0][0];
+  const secondStyleId = rankedStyles[1][0];
+
+  const archScores = { A:0, B:0, C:0, D:0, E:0, F:0 };
+  Object.keys(styleScores).forEach(sid => {
+    const arch = STYLES[sid].archetype;
+    archScores[arch] += styleScores[sid];
+  });
+  const archTotal = Object.values(archScores).reduce((a, b) => a + b, 0);
+  const archPercents = {};
+  Object.keys(archScores).forEach(k => {
+    archPercents[k] = archTotal > 0 ? Math.round(archScores[k] / archTotal * 100) : 0;
+  });
+  const sumPct = Object.values(archPercents).reduce((a, b) => a + b, 0);
+  if (sumPct !== 100 && archTotal > 0) {
+    const maxKey = Object.keys(archPercents).sort((a,b) => archPercents[b] - archPercents[a])[0];
+    archPercents[maxKey] += (100 - sumPct);
+  }
+
+  return { rankedStyles, topStyleId, secondStyleId, archPercents };
+}
+
+/* ============================================================
+   结果渲染
+   ============================================================ */
+function renderResult() {
+  const { rankedStyles, topStyleId, secondStyleId, archPercents } = computeResult();
+  const topStyle = STYLES[topStyleId];
+  const secondStyle = STYLES[secondStyleId];
+  const topScore = rankedStyles[0][1];
+  const secondScore = rankedStyles[1][1];
+  const gap = topScore - secondScore;
+
+  const isMix = gap <= 2 && topStyle.archetype !== secondStyle.archetype;
+  let mixName = '';
+  if (isMix) {
+    mixName = `${topStyle.name} × ${secondStyle.name}`;
+  }
+
+  const topArch = topStyle.archetype;
+
+  /* ---------- 头部 ---------- */
+  $('r-eyebrow').textContent = isMix ? '混搭风格' : '主导风格';
+  $('r-name').textContent = isMix ? mixName : topStyle.name;
+  $('r-en').textContent = isMix ? `${topStyle.archetype} 系 × ${secondStyle.archetype} 系` : (topStyle.archetype + ' 系');
+  $('r-slogan').textContent = isMix ? `“${topStyle.slogan}” × “${secondStyle.slogan}”` : topStyle.slogan;
+
+  /* ---------- 视觉封面 ---------- */
+  const visual = $('r-visual');
+  if (visual) {
+    if (isMix) {
+      const g1 = topStyle.gradient || 'linear-gradient(135deg, #2a2830, #17161a)';
+      const g2 = secondStyle.gradient || 'linear-gradient(135deg, #2a2830, #17161a)';
+      visual.style.background = `${g1}, ${g2}`;
+      visual.style.backgroundBlendMode = 'overlay';
+      visual.innerHTML = `
+        <span>${topStyle.emoji || '◆'}${secondStyle.emoji || '◇'}</span>
+        <span class="visual-label">${topStyle.name} × ${secondStyle.name}</span>
+      `;
+    } else {
+      visual.style.background = topStyle.gradient || 'linear-gradient(135deg, #2a2830, #17161a)';
+      visual.innerHTML = `
+        <span>${topStyle.emoji || '◆'}</span>
+        <span class="visual-label">${topStyle.name}</span>
+      `;
+    }
+  }
+
+  /* ---------- 原型分布（无百分比数字） ---------- */
+  const archNames = { A:'秩序理性', B:'反叛边缘', C:'怀旧浪漫', D:'享乐消费', E:'未来数字', F:'自然共生' };
+  const archColors = { A:'var(--c-A)', B:'var(--c-B)', C:'var(--c-C)', D:'var(--c-D)', E:'var(--c-E)', F:'var(--c-F)' };
+  $('r-chart').innerHTML = Object.entries(archPercents).sort((a,b) => b[1]-a[1]).map(([k, pct]) => `
+    <div class="chart-row ${k === topArch ? 'dominant' : ''}">
+      <span class="chart-label">${archNames[k]}</span>
+      <span class="chart-bar-bg"><i class="chart-bar-fill" data-width="${pct}" style="background:${archColors[k]};"></i></span>
+    </div>
+  `).join('');
+  requestAnimationFrame(() => { setTimeout(() => { document.querySelectorAll('.chart-bar-fill').forEach(el => { el.style.width = el.dataset.width + '%'; }); }, 100); });
+
+  /* ---------- 思想解读 ---------- */
+  if (isMix) {
+    $('r-thought').innerHTML = `你的风格在 <b>${topStyle.name}</b> 与 <b>${secondStyle.name}</b> 之间摇摆。这两种思想相互补充，形成了你独特的混搭气质。<br><br><b>${topStyle.name}：</b>${topStyle.desc}<br><br><b>${secondStyle.name}：</b>${secondStyle.desc}`;
+  } else {
+    $('r-thought').innerHTML = `<b>${topStyle.name}</b><br>${topStyle.desc}<br><br><b>思想内核：</b>${topStyle.slogan}`;
+  }
+
+  /* ---------- 风格配比（无百分比） ---------- */
+  if (isMix) {
+    $('r-ratio').innerHTML = `
+      <div class="ratio-item"><div class="r-name">${topStyle.name}</div><div class="r-sub">主 风 格</div></div>
+      <div class="ratio-item"><div class="r-name">${secondStyle.name}</div><div class="r-sub">副 风 格</div></div>`;
+  } else {
+    $('r-ratio').innerHTML = `<div class="ratio-item"><div class="r-name">${topStyle.name}</div><div class="r-sub">纯 粹 风 格</div></div>`;
+  }
+
+  /* ---------- 穿搭系统 ---------- */
+  const main = topStyle;
+  const extra = isMix ? secondStyle : null;
+  let gridHtml = `
+    <div class="cell"><div class="k">色彩</div><div class="v">${main.colors}${extra ? ' / ' + extra.colors : ''}</div></div>
+    <div class="cell"><div class="k">材质</div><div class="v">${main.materials}${extra ? ' / ' + extra.materials : ''}</div></div>
+    <div class="cell wide"><div class="k">核心单品</div><div class="v"><ul>${main.items.map(i => `<li>${i}</li>`).join('')}${extra ? extra.items.slice(0,2).map(i => `<li>${i}（融入）</li>`).join('') : ''}</ul></div></div>
+    <div class="cell"><div class="k">配饰</div><div class="v">${main.accessories}${extra ? ' / ' + extra.accessories : ''}</div></div>
+    <div class="cell wide"><div class="k">避　免</div><div class="v">${main.avoid}${extra ? '；同时避免与' + extra.avoid + '冲突' : ''}</div></div>`;
+  $('r-grid').innerHTML = gridHtml;
+
+  /* ---------- 标签 ---------- */
+  $('r-tags').innerHTML = `<span>#${main.name}</span>${isMix ? `<span>#${secondStyle.name}</span>` : ''}<span>#${archNames[topArch]}</span>`;
+
+  /* ---------- 建议 ---------- */
+  let adviceHtml = `<p class="a-title">给你的建议</p>`;
+  if (isMix) {
+    adviceHtml += `<p>你的风格在 <b>${topStyle.name}</b> 和 <b>${secondStyle.name}</b> 之间游走，这让你既有主风格的骨架，又有副风格的点缀。</p>
+      <p>建议以 <b>${topStyle.name}</b> 为主（约70%），用 <b>${secondStyle.name}</b> 的元素做点缀（约30%）。例如：穿好主风格的核心单品（${main.items[0]}），再加入副风格的一件配饰或一件单品（${secondStyle.items[0]}）。</p>
+      <p>不要五五开，否则会失去焦点。如果某天想切换状态，可以把比例倒过来。</p>`;
+  } else {
+    adviceHtml += `<p>你的风格非常集中，<b>${topStyle.name}</b> 是你最自然的表达。你不需要混搭来证明什么，纯粹就是你的力量。</p>
+      <p>建议从核心单品开始建立衣橱：<b>${main.items[0]}</b>。围绕它扩展，保持色彩与材质的一致性。</p>
+      <p>如果哪天觉得单调，可以在配饰上做文章——${main.accessories}——但不要改变整体结构。</p>`;
+  }
+  $('r-advice').innerHTML = adviceHtml;
+
+  /* ---------- 同原型其他风格 ---------- */
+  const siblings = Object.values(STYLES).filter(s => s.archetype === topArch && s.name !== main.name).slice(0, 4);
+  $('r-alt-list').innerHTML = siblings.map(s => `<div class="alt-item">${s.emoji || ''} ${s.name}</div>`).join('');
+}
+
+/* ============================================================
+   事件绑定
+   ============================================================ */
+$('btn-start').addEventListener('click', () => {
+  state.current = 0;
+  state.answers = new Array(QUESTIONS.length).fill(null);
+  renderQuestion();
+  showScreen('screen-quiz');
+});
+$('btn-prev').addEventListener('click', () => { if (state.current > 0) { state.current--; renderQuestion(); } });
+$('btn-next').addEventListener('click', () => {
+  if (state.answers[state.current] === null) return;
+  if (state.current < QUESTIONS.length - 1) { state.current++; renderQuestion(); }
+  else {
+    const unanswered = state.answers.findIndex(a => a === null);
+    if (unanswered !== -1) { state.current = unanswered; renderQuestion(); return; }
+    renderResult();
+    showScreen('screen-result');
+  }
+});
+$('btn-restart').addEventListener('click', () => {
+  state.current = 0;
+  state.answers = new Array(QUESTIONS.length).fill(null);
+  showScreen('screen-start');
+});
+</script>
+</body>
+</html>
